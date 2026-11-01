@@ -1,0 +1,4 @@
+../app/body_control/body_state_mgr.c:16:6:BodyStateMgr_Init	8	static
+../app/body_control/body_state_mgr.c:25:6:BodyStateMgr_ReadState	16	static
+../app/body_control/body_state_mgr.c:35:17:BodyStateMgr_RequestDoorLock	24	static
+../app/body_control/body_state_mgr.c:57:6:BodyStateMgr_OnLockActuatorDone	24	static

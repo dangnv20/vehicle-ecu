@@ -19,6 +19,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "fdcan.h"
+#include "usart.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,84 +46,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 COM_InitTypeDef BspCOMInit;
-FDCAN_HandleTypeDef hfdcan1;
 
-UART_HandleTypeDef huart1;
-
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for CanRxTask */
-osThreadId_t CanRxTaskHandle;
-const osThreadAttr_t CanRxTask_attributes = {
-  .name = "CanRxTask",
-  .priority = (osPriority_t) osPriorityHigh,
-  .stack_size = 512 * 4
-};
-/* Definitions for VehicleTask */
-osThreadId_t VehicleTaskHandle;
-const osThreadAttr_t VehicleTask_attributes = {
-  .name = "VehicleTask",
-  .priority = (osPriority_t) osPriorityAboveNormal,
-  .stack_size = 512 * 4
-};
-/* Definitions for CanTxTask */
-osThreadId_t CanTxTaskHandle;
-const osThreadAttr_t CanTxTask_attributes = {
-  .name = "CanTxTask",
-  .priority = (osPriority_t) osPriorityAboveNormal,
-  .stack_size = 512 * 4
-};
-/* Definitions for DiagTask */
-osThreadId_t DiagTaskHandle;
-const osThreadAttr_t DiagTask_attributes = {
-  .name = "DiagTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1028 * 4
-};
-/* Definitions for HealthTask */
-osThreadId_t HealthTaskHandle;
-const osThreadAttr_t HealthTask_attributes = {
-  .name = "HealthTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
-};
-/* Definitions for NvmTask */
-osThreadId_t NvmTaskHandle;
-const osThreadAttr_t NvmTask_attributes = {
-  .name = "NvmTask",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 512 * 4
-};
-/* Definitions for CliTask */
-osThreadId_t CliTaskHandle;
-const osThreadAttr_t CliTask_attributes = {
-  .name = "CliTask",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 512 * 4
-};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_FDCAN1_Init(void);
-static void MX_USART1_UART_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
-void StartTask03(void *argument);
-void StartTask04(void *argument);
-void StartTask05(void *argument);
-void StartTask06(void *argument);
-void StartTask07(void *argument);
-void StartTask08(void *argument);
-
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -166,56 +99,8 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
-  /* creation of CanRxTask */
-  CanRxTaskHandle = osThreadNew(StartTask02, NULL, &CanRxTask_attributes);
-
-  /* creation of VehicleTask */
-  VehicleTaskHandle = osThreadNew(StartTask03, NULL, &VehicleTask_attributes);
-
-  /* creation of CanTxTask */
-  CanTxTaskHandle = osThreadNew(StartTask04, NULL, &CanTxTask_attributes);
-
-  /* creation of DiagTask */
-  DiagTaskHandle = osThreadNew(StartTask05, NULL, &DiagTask_attributes);
-
-  /* creation of HealthTask */
-  HealthTaskHandle = osThreadNew(StartTask06, NULL, &HealthTask_attributes);
-
-  /* creation of NvmTask */
-  NvmTaskHandle = osThreadNew(StartTask07, NULL, &NvmTask_attributes);
-
-  /* creation of CliTask */
-  CliTaskHandle = osThreadNew(StartTask08, NULL, &CliTask_attributes);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  MX_FREERTOS_Init();
 
   /* Initialize led */
   BSP_LED_Init(LED_GREEN);
@@ -297,266 +182,9 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief FDCAN1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_FDCAN1_Init(void)
-{
-
-  /* USER CODE BEGIN FDCAN1_Init 0 */
-
-  /* USER CODE END FDCAN1_Init 0 */
-
-  /* USER CODE BEGIN FDCAN1_Init 1 */
-
-  /* USER CODE END FDCAN1_Init 1 */
-  hfdcan1.Instance = FDCAN1;
-  hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan1.Init.AutoRetransmission = ENABLE;
-  hfdcan1.Init.TransmitPause = DISABLE;
-  hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = 17;
-  hfdcan1.Init.NominalSyncJumpWidth = 3;
-  hfdcan1.Init.NominalTimeSeg1 = 16;
-  hfdcan1.Init.NominalTimeSeg2 = 3;
-  hfdcan1.Init.DataPrescaler = 1;
-  hfdcan1.Init.DataSyncJumpWidth = 1;
-  hfdcan1.Init.DataTimeSeg1 = 1;
-  hfdcan1.Init.DataTimeSeg2 = 1;
-  hfdcan1.Init.StdFiltersNbr = 4;
-  hfdcan1.Init.ExtFiltersNbr = 0;
-  hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN FDCAN1_Init 2 */
-
-  /* USER CODE END FDCAN1_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
-
-  /* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-
-  /* USER CODE END MX_GPIO_Init_2 */
-}
-
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_StartTask02 */
-/**
-* @brief Function implementing the CanRxTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
-{
-  /* USER CODE BEGIN StartTask02 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask02 */
-}
-
-/* USER CODE BEGIN Header_StartTask03 */
-/**
-* @brief Function implementing the VehicleTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void *argument)
-{
-  /* USER CODE BEGIN StartTask03 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask03 */
-}
-
-/* USER CODE BEGIN Header_StartTask04 */
-/**
-* @brief Function implementing the CanTxTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask04 */
-void StartTask04(void *argument)
-{
-  /* USER CODE BEGIN StartTask04 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask04 */
-}
-
-/* USER CODE BEGIN Header_StartTask05 */
-/**
-* @brief Function implementing the DiagTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask05 */
-void StartTask05(void *argument)
-{
-  /* USER CODE BEGIN StartTask05 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask05 */
-}
-
-/* USER CODE BEGIN Header_StartTask06 */
-/**
-* @brief Function implementing the HealthTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask06 */
-void StartTask06(void *argument)
-{
-  /* USER CODE BEGIN StartTask06 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask06 */
-}
-
-/* USER CODE BEGIN Header_StartTask07 */
-/**
-* @brief Function implementing the NvmTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask07 */
-void StartTask07(void *argument)
-{
-  /* USER CODE BEGIN StartTask07 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask07 */
-}
-
-/* USER CODE BEGIN Header_StartTask08 */
-/**
-* @brief Function implementing the CliTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask08 */
-void StartTask08(void *argument)
-{
-  /* USER CODE BEGIN StartTask08 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask08 */
-}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

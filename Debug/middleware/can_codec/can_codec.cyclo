@@ -1,0 +1,7 @@
+../middleware/can_codec/can_codec.c:6:20:PackU16LE	1
+../middleware/can_codec/can_codec.c:13:16:CalcSimpleChecksum	2
+../middleware/can_codec/can_codec.c:30:6:CanCodec_EncodeVehicleDynamic	7
+../middleware/can_codec/can_codec.c:67:6:CanCodec_EncodeVehicleStatus	2
+../middleware/can_codec/can_codec.c:86:6:CanCodec_EncodeBodyStatus	4
+../middleware/can_codec/can_codec.c:113:6:CanCodec_EncodeCommandAck	2
+../middleware/can_codec/can_codec.c:134:6:CanCodec_DecodeRemoteCommand	4

@@ -1,0 +1,3 @@
+../app/command/command_mgr.c:18:13:SendImmediateRejectAck	32	static
+../app/command/command_mgr.c:32:6:CommandMgr_Init	4	static
+../app/command/command_mgr.c:37:6:CommandMgr_ProcessRemoteCommand	40	static

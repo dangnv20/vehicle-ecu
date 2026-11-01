@@ -1,0 +1,6 @@
+../app/vehicle_state/vehicle_state_mgr.c:9:6:VehicleStateMgr_Init	8	static
+../app/vehicle_state/vehicle_state_mgr.c:20:12:VehicleStateMgr_GetEcuState	4	static
+../app/vehicle_state/vehicle_state_mgr.c:25:6:VehicleStateMgr_SetEcuState	16	static
+../app/vehicle_state/vehicle_state_mgr.c:30:6:VehicleStateMgr_ReadMotion	24	static
+../app/vehicle_state/vehicle_state_mgr.c:41:6:VehicleStateMgr_UpdateSpeed	24	static
+../app/vehicle_state/vehicle_state_mgr.c:51:6:VehicleStateMgr_UpdateIgnition	24	static
