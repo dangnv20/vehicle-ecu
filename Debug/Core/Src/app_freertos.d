@@ -42,7 +42,14 @@ Core/Src/app_freertos.o: ../Core/Src/app_freertos.c \
  ../Drivers/BSP/STM32G4xx_Nucleo/stm32g4xx_nucleo_errno.h \
  ../Core/Inc/stm32g4xx_nucleo_conf.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h \
- ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
+ ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
+ D:/Project/VECU_STM32/app/cli/debug_cli.h \
+ D:/Project/VECU_STM32/app/vehicle_state/vehicle_state_mgr.h \
+ D:/Project/VECU_STM32/app/inc/app_types.h \
+ D:/Project/VECU_STM32/app/body_control/body_state_mgr.h \
+ D:/Project/VECU_STM32/app/command/command_mgr.h \
+ D:/Project/VECU_STM32/middleware/can_codec/can_codec.h \
+ D:/Project/VECU_STM32/config/can_matrix.h
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 ../Core/Inc/FreeRTOSConfig.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -88,3 +95,10 @@ Core/Src/app_freertos.o: ../Core/Src/app_freertos.c \
 ../Core/Inc/stm32g4xx_nucleo_conf.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h:
+D:/Project/VECU_STM32/app/cli/debug_cli.h:
+D:/Project/VECU_STM32/app/vehicle_state/vehicle_state_mgr.h:
+D:/Project/VECU_STM32/app/inc/app_types.h:
+D:/Project/VECU_STM32/app/body_control/body_state_mgr.h:
+D:/Project/VECU_STM32/app/command/command_mgr.h:
+D:/Project/VECU_STM32/middleware/can_codec/can_codec.h:
+D:/Project/VECU_STM32/config/can_matrix.h:

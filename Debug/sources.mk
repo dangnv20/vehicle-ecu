@@ -31,6 +31,7 @@ Middlewares/Third_Party/FreeRTOS/Source \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang \
 app/body_control \
+app/cli \
 app/command \
 app/diagnostics \
 app/dtc \
@@ -40,4 +41,5 @@ app/nvm \
 app/vehicle_state \
 middleware/can_codec \
 platform/can_if \
+platform/port_impl \
 

@@ -107,6 +107,27 @@ void CommandMgr_ProcessRemoteCommand(const RemoteCommandReq_t *req)
             }
             break;
 
+        case CMD_ID_FLASH_LIGHTS:
+                    s_cmd_history.has_history  = true;
+                    s_cmd_history.last_seq     = req->sequence;
+                    s_cmd_history.last_cmd_id  = req->cmd_id;
+                    s_cmd_history.last_param   = req->parameter;
+                    s_cmd_history.timestamp_ms = now;
+
+                    BodyStateMgr_StartFlashLights();
+                    SendImmediateRejectAck(req, ACK_RES_SUCCESS); /* Trả ACK ngay, đèn tự nháy nền */
+                    break;
+
+                case CMD_ID_HONK:
+                    s_cmd_history.has_history  = true;
+                    s_cmd_history.last_seq     = req->sequence;
+                    s_cmd_history.last_cmd_id  = req->cmd_id;
+                    s_cmd_history.last_param   = req->parameter;
+                    s_cmd_history.timestamp_ms = now;
+
+                    BodyStateMgr_StartHonkPattern();
+                    SendImmediateRejectAck(req, ACK_RES_SUCCESS); /* Trả ACK ngay, còi tự kêu nền */
+                    break;
         default:
             SendImmediateRejectAck(req, ACK_RES_REJECT_FORMAT_CRC);
             break;

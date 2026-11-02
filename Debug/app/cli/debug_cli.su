@@ -1,0 +1,3 @@
+../app/cli/debug_cli.c:22:6:Cli_Init	8	static
+../app/cli/debug_cli.c:29:6:Cli_ReceiveChar	16	static
+../app/cli/debug_cli.c:62:6:Cli_Process	216	static

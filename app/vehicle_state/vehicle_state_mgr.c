@@ -5,6 +5,10 @@
 /* Dữ liệu nội bộ được đóng kín (Single Writer Ownership - Mục 3 Kiến trúc) */
 static EcuState_t              s_ecu_state;
 static VehicleMotionSnapshot_t s_motion_state;
+/* 0.1 km tương ứng với: (speed_centi_kmh) * (số chu kỳ 10ms) = 3,600,000 */
+#define ODO_ACCUM_PER_DECI_KM   (3600000UL)
+
+static uint32_t s_odo_accum = 0UL;
 
 void VehicleStateMgr_Init(void)
 {
@@ -17,6 +21,31 @@ void VehicleStateMgr_Init(void)
     OsPort_ExitCritical();
 }
 
+
+void VehicleStateMgr_Step10ms(void)
+{
+    uint32_t now = TimePort_GetTickMs();
+
+    OsPort_EnterCritical();
+
+    /* 1. Thực thi VEH-002: Nếu Ignition == OFF, ép Speed và RPM giảm về 0 trong <= 100ms */
+    if (s_motion_state.ignition == IGN_STATE_OFF) {
+        s_motion_state.speed_centi_kmh = 0U;
+        s_motion_state.rpm_quarter     = 0U;
+    }
+
+    /* 2. Thực thi VEH-003: Tích phân Odometer chính xác từ tốc độ hợp lệ */
+    if ((s_motion_state.speed_quality == SIGNAL_VALID) && (s_motion_state.speed_centi_kmh > 0U)) {
+        s_odo_accum += (uint32_t)s_motion_state.speed_centi_kmh;
+        while (s_odo_accum >= ODO_ACCUM_PER_DECI_KM) {
+            s_odo_accum -= ODO_ACCUM_PER_DECI_KM;
+            s_motion_state.odometer_deci_km++;
+        }
+    }
+
+    s_motion_state.updated_at_ms = now;
+    OsPort_ExitCritical();
+}
 EcuState_t VehicleStateMgr_GetEcuState(void)
 {
     return s_ecu_state;

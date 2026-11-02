@@ -1,6 +1,7 @@
-../app/vehicle_state/vehicle_state_mgr.c:9:6:VehicleStateMgr_Init	1
-../app/vehicle_state/vehicle_state_mgr.c:20:12:VehicleStateMgr_GetEcuState	1
-../app/vehicle_state/vehicle_state_mgr.c:25:6:VehicleStateMgr_SetEcuState	1
-../app/vehicle_state/vehicle_state_mgr.c:30:6:VehicleStateMgr_ReadMotion	2
-../app/vehicle_state/vehicle_state_mgr.c:41:6:VehicleStateMgr_UpdateSpeed	1
-../app/vehicle_state/vehicle_state_mgr.c:51:6:VehicleStateMgr_UpdateIgnition	2
+../app/vehicle_state/vehicle_state_mgr.c:13:6:VehicleStateMgr_Init	1
+../app/vehicle_state/vehicle_state_mgr.c:25:6:VehicleStateMgr_Step10ms	5
+../app/vehicle_state/vehicle_state_mgr.c:49:12:VehicleStateMgr_GetEcuState	1
+../app/vehicle_state/vehicle_state_mgr.c:54:6:VehicleStateMgr_SetEcuState	1
+../app/vehicle_state/vehicle_state_mgr.c:59:6:VehicleStateMgr_ReadMotion	2
+../app/vehicle_state/vehicle_state_mgr.c:70:6:VehicleStateMgr_UpdateSpeed	1
+../app/vehicle_state/vehicle_state_mgr.c:80:6:VehicleStateMgr_UpdateIgnition	2

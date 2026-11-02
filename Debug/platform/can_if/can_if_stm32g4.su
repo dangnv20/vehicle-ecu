@@ -1,0 +1,5 @@
+../platform/can_if/can_if_stm32g4.c:21:16:ConvertFdcanDlcToBytes	16	static
+../platform/can_if/can_if_stm32g4.c:36:17:CanIf_InitAndStart	48	static
+../platform/can_if/can_if_stm32g4.c:85:10:CanIf_GetBusOffCount	4	static
+../platform/can_if/can_if_stm32g4.c:95:6:HAL_FDCAN_RxFifo0Callback	72	static
+../platform/can_if/can_if_stm32g4.c:116:6:HAL_FDCAN_ErrorStatusCallback	64	static

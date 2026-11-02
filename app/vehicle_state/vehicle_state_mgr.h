@@ -2,7 +2,7 @@
 #define VEHICLE_STATE_MGR_H
 
 #include "app_types.h"
-
+void VehicleStateMgr_Step10ms(void);
 void      VehicleStateMgr_Init(void);
 EcuState_t VehicleStateMgr_GetEcuState(void);
 void      VehicleStateMgr_SetEcuState(EcuState_t new_state);

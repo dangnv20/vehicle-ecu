@@ -1,0 +1,10 @@
+../platform/port_impl/port_stm32g4.c:23:10:TimePort_GetTickMs	1
+../platform/port_impl/port_stm32g4.c:28:6:OsPort_EnterCritical	2
+../platform/port_impl/port_stm32g4.c:38:6:OsPort_ExitCritical	3
+../platform/port_impl/port_stm32g4.c:51:17:DoorPort_RequestLock	1
+../platform/port_impl/port_stm32g4.c:64:17:LightPort_SetOutput	1
+../platform/port_impl/port_stm32g4.c:74:17:HornPort_SetOutput	1
+../platform/port_impl/port_stm32g4.c:83:6:FaultPort_Report	1
+../platform/port_impl/port_stm32g4.c:90:6:UartPort_WriteString	2
+../platform/port_impl/port_stm32g4.c:99:6:UartPort_StartReceive	1
+../platform/port_impl/port_stm32g4.c:105:6:HAL_UART_RxCpltCallback	2

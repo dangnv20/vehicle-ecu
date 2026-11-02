@@ -25,6 +25,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "debug_cli.h"
+
+#include "vehicle_state_mgr.h"
+#include "body_state_mgr.h"
+#include "command_mgr.h"
+#include "can_codec.h"
+#include "can_matrix.h"
+/* Khai báo các hàm từ platform/can_if/ */
+extern ServiceResult_t CanIf_InitAndStart(void);
+extern void            CanScheduler_Step10ms(void);
+extern void UartPort_StartReceive(void);
 
 /* USER CODE END Includes */
 
@@ -45,6 +56,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+  osMessageQueueId_t canRxQueueHandle;
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -110,13 +122,13 @@ const osThreadAttr_t CliTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
-void StartTask03(void *argument);
-void StartTask04(void *argument);
-void StartTask05(void *argument);
-void StartTask06(void *argument);
-void StartTask07(void *argument);
-void StartTask08(void *argument);
+void StartCanRxTask(void *argument);
+void StartVehicleTask(void *argument);
+void StartCanTxTask(void *argument);
+void StartDiagTask(void *argument);
+void StartHealthTask(void *argument);
+void StartNvmTask(void *argument);
+void StartCliTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -187,6 +199,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
+	/* Tạo hàng đợi nhận CAN (16 phần tử, mỗi phần tử 16 bytes) */
+	canRxQueueHandle = osMessageQueueNew(16U, 16U, NULL);
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
@@ -195,27 +209,34 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of CanRxTask */
-  CanRxTaskHandle = osThreadNew(StartTask02, NULL, &CanRxTask_attributes);
+  CanRxTaskHandle = osThreadNew(StartCanRxTask, NULL, &CanRxTask_attributes);
 
   /* creation of VehicleTask */
-  VehicleTaskHandle = osThreadNew(StartTask03, NULL, &VehicleTask_attributes);
+  VehicleTaskHandle = osThreadNew(StartVehicleTask, NULL, &VehicleTask_attributes);
 
   /* creation of CanTxTask */
-  CanTxTaskHandle = osThreadNew(StartTask04, NULL, &CanTxTask_attributes);
+  CanTxTaskHandle = osThreadNew(StartCanTxTask, NULL, &CanTxTask_attributes);
 
   /* creation of DiagTask */
-  DiagTaskHandle = osThreadNew(StartTask05, NULL, &DiagTask_attributes);
+  DiagTaskHandle = osThreadNew(StartDiagTask, NULL, &DiagTask_attributes);
 
   /* creation of HealthTask */
-  HealthTaskHandle = osThreadNew(StartTask06, NULL, &HealthTask_attributes);
+  HealthTaskHandle = osThreadNew(StartHealthTask, NULL, &HealthTask_attributes);
 
   /* creation of NvmTask */
-  NvmTaskHandle = osThreadNew(StartTask07, NULL, &NvmTask_attributes);
+  NvmTaskHandle = osThreadNew(StartNvmTask, NULL, &NvmTask_attributes);
 
   /* creation of CliTask */
-  CliTaskHandle = osThreadNew(StartTask08, NULL, &CliTask_attributes);
+  CliTaskHandle = osThreadNew(StartCliTask, NULL, &CliTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  Cli_Init();
+  UartPort_StartReceive(); /* Bật ngắt UART1 lắng nghe bàn phím */
+
+  VehicleStateMgr_Init();
+  BodyStateMgr_Init();
+  CommandMgr_Init();
+  (void)CanIf_InitAndStart();
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -243,130 +264,159 @@ void StartDefaultTask(void *argument)
   /* USER CODE END StartDefaultTask */
 }
 
-/* USER CODE BEGIN Header_StartTask02 */
+/* USER CODE BEGIN Header_StartCanRxTask */
 /**
 * @brief Function implementing the CanRxTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
+/* USER CODE END Header_StartCanRxTask */
+void StartCanRxTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask02 */
+  /* USER CODE BEGIN StartCanRxTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask02 */
+	typedef struct {
+	      uint32_t can_id;
+	      uint8_t  dlc;
+	      uint8_t  data[8];
+	  } RawCanFrame_t;
+
+	  RawCanFrame_t rx_frame;
+	  for(;;)
+	  {
+	    /* Ngủ chờ sự kiện từ canRxQueueHandle (timeout = osWaitForever) */
+	    if (osMessageQueueGet(canRxQueueHandle, &rx_frame, NULL, osWaitForever) == osOK)
+	    {
+	      if (rx_frame.can_id == CAN_ID_REMOTE_COMMAND) /* 0x400 */
+	      {
+	        RemoteCommandReq_t cmd_req;
+	        CanCodec_DecodeRemoteCommand(rx_frame.data, rx_frame.dlc, &cmd_req);
+	        CommandMgr_ProcessRemoteCommand(&cmd_req);
+	      }
+	    }
+	  }
+  /* USER CODE END StartCanRxTask */
 }
 
-/* USER CODE BEGIN Header_StartTask03 */
+/* USER CODE BEGIN Header_StartVehicleTask */
 /**
 * @brief Function implementing the VehicleTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void *argument)
+/* USER CODE END Header_StartVehicleTask */
+void StartVehicleTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask03 */
+  /* USER CODE BEGIN StartVehicleTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask03 */
+	uint32_t wake_tick = osKernelGetTickCount();
+	  for(;;)
+	  {
+	    VehicleStateMgr_Step10ms();
+	    BodyStateMgr_Step10ms();
+	    wake_tick += 10U;
+	    osDelayUntil(wake_tick);
+	  }
+  /* USER CODE END StartVehicleTask */
 }
 
-/* USER CODE BEGIN Header_StartTask04 */
+/* USER CODE BEGIN Header_StartCanTxTask */
 /**
 * @brief Function implementing the CanTxTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask04 */
-void StartTask04(void *argument)
+/* USER CODE END Header_StartCanTxTask */
+void StartCanTxTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask04 */
+  /* USER CODE BEGIN StartCanTxTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask04 */
+	uint32_t wake_tick = osKernelGetTickCount();
+	  for(;;)
+	  {
+	    CanScheduler_Step10ms();
+	    wake_tick += 10U;
+	    osDelayUntil(wake_tick);
+	  }
+  /* USER CODE END StartCanTxTask */
 }
 
-/* USER CODE BEGIN Header_StartTask05 */
+/* USER CODE BEGIN Header_StartDiagTask */
 /**
 * @brief Function implementing the DiagTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask05 */
-void StartTask05(void *argument)
+/* USER CODE END Header_StartDiagTask */
+void StartDiagTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask05 */
+  /* USER CODE BEGIN StartDiagTask */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END StartTask05 */
+  /* USER CODE END StartDiagTask */
 }
 
-/* USER CODE BEGIN Header_StartTask06 */
+/* USER CODE BEGIN Header_StartHealthTask */
 /**
 * @brief Function implementing the HealthTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask06 */
-void StartTask06(void *argument)
+/* USER CODE END Header_StartHealthTask */
+void StartHealthTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask06 */
+  /* USER CODE BEGIN StartHealthTask */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END StartTask06 */
+  /* USER CODE END StartHealthTask */
 }
 
-/* USER CODE BEGIN Header_StartTask07 */
+/* USER CODE BEGIN Header_StartNvmTask */
 /**
 * @brief Function implementing the NvmTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask07 */
-void StartTask07(void *argument)
+/* USER CODE END Header_StartNvmTask */
+void StartNvmTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask07 */
+  /* USER CODE BEGIN StartNvmTask */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END StartTask07 */
+  /* USER CODE END StartNvmTask */
 }
 
-/* USER CODE BEGIN Header_StartTask08 */
+/* USER CODE BEGIN Header_StartCliTask */
 /**
 * @brief Function implementing the CliTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask08 */
-void StartTask08(void *argument)
+/* USER CODE END Header_StartCliTask */
+__weak void StartCliTask(void *argument)
 {
-  /* USER CODE BEGIN StartTask08 */
+  /* USER CODE BEGIN StartCliTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask08 */
+	uint32_t wake_tick = osKernelGetTickCount();
+	  for(;;)
+	  {
+	    /* Gọi hàm xử lý dòng lệnh của tầng Application */
+	    Cli_Process();
+
+	    /* Chạy chu kỳ 50ms (Vì UART gõ phím rất chậm, không cần chạy liên tục) */
+	    wake_tick += 50U;
+	    osDelayUntil(wake_tick);
+	  }
+  /* USER CODE END StartCliTask */
 }
 
 /* Private application code --------------------------------------------------*/

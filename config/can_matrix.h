@@ -1,3 +1,4 @@
+/* File: config/can_matrix.h */
 #ifndef CAN_MATRIX_H
 #define CAN_MATRIX_H
 
@@ -32,7 +33,7 @@
 #define CAN_ID_UDS_PHYS_RESP        (0x7E8U)
 
 /* =========================================================================
- * 2. THÔNG SỐ NGƯỠNG LOGIC NGHIỆP VỤ (Xuất phát từ Mục 11 Customer Spec)
+ * 2. THÔNG SỐ NGƯỠNG LOGIC NGHIỆP VỤ ( 11 Customer Spec)
  * ========================================================================= */
 /* Đơn vị nội bộ của tốc độ là 0.01 km/h (centi-km/h) -> 5.00 km/h = 500 */
 #define CFG_LOCK_MAX_SPEED_CENTI_KMH    (500U)
